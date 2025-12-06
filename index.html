@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Actividad Staff Discord</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #5865f2, #7289da);
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px #7289da;
+        }
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        label {
+            font-weight: bold;
+            color: #b9bbbe;
+        }
+        input, select, button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        input[type="date"], select {
+            background: #36393f;
+            color: #ffffff;
+        }
+        input[type="text"] {
+            background: #36393f;
+            color: #ffffff;
+            flex: 1;
+        }
+        button {
+            background: #5865f2;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #4752c4;
+        }
+        #downloadBtn {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #36393f;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #202225;
+        }
+        th {
+            background: #2f3136;
+            color: #ffffff;
+            font-weight: bold;
+        }
+        td {
+            color: #dcddde;
+        }
+        tr:hover {
+            background: #40444b;
+        }
+        .status-activo { color: #57f287; }
+        .status-semiactivo { color: #fee75c; }
+        .status-ausente { color: #f04747; }
+        .status-ausencia { color: #f04747; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Actividad Staff Discord</h1>
+        <form id="activityForm">
+            <label for="user">Usuario:</label>
+            <input type="text" id="user" placeholder="Nombre de usuario" required>
+            <label for="date">Fecha:</label>
+            <input type="date" id="date" required>
+            <label for="status">Estado:</label>
+            <select id="status" required>
+                <option value="">Seleccionar...</option>
+                <option value="activo">Activo</option>
+                <option value="semiactivo">Semiactivo</option>
+                <option value="ausente">Ausente</option>
+                <option value="ausencia">Ausencia</option>
+            </select>
+            <label for="notes">Notas:</label>
+            <input type="text" id="notes" placeholder="Notas opcionales">
+            <button type="submit">Agregar Entrada</button>
+        </form>
+        <button id="downloadBtn">Descargar como CSV</button>
+        <table id="activityTable">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Notas</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Las entradas se agregarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const form = document.getElementById('activityForm');
+        const tableBody = document.getElementById('tableBody');
+        const downloadBtn = document.getElementById('downloadBtn');
+        let activities = JSON.parse(localStorage.getItem('discordStaffActivities')) || [];
+
+        // Función para renderizar la tabla
+        function renderTable() {
+            tableBody.innerHTML = '';
+            activities.forEach((entry, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.user}</td>
+                    <td>${entry.date}</td>
+                    <td class="status-${entry.status.toLowerCase()}">${entry.status}</td>
+                    <td>${entry.notes}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Agregar nueva entrada
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('user').value;
+            const date = document.getElementById('date').value;
+            const status = document.getElementById('status').value;
+            const notes = document.getElementById('notes').value;
+            activities.push({ user, date, status, notes });
+            localStorage.setItem('discordStaffActivities', JSON.stringify(activities));
+            renderTable();
+            form.reset();
+        });
+
+        // Descargar como CSV
+        downloadBtn.addEventListener('click', () => {
+            if (activities.length === 0) {
+                alert('No hay entradas para descargar.');
+                return;
+            }
+            let csv = 'Usuario,Fecha,Estado,Notas\n';
+            activities.forEach(entry => {
+                csv += `${entry.user},${entry.date},${entry.status},${entry.notes}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'registro_staff_discord.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Renderizar al cargar la página
+        renderTable();
+    </script>
+</body>
+</html>
