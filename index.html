@@ -93,6 +93,18 @@
         .status-semiactivo { color: #fee75c; }
         .status-ausente { color: #f04747; }
         .status-ausencia { color: #f04747; }
+        .delete-btn {
+            background: #f04747;
+            color: #ffffff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .delete-btn:hover {
+            background: #d84040;
+        }
     </style>
 </head>
 <body>
@@ -113,6 +125,8 @@
             </select>
             <label for="notes">Notas:</label>
             <input type="text" id="notes" placeholder="Notas opcionales">
+            <label for="registrar">Registrador:</label>
+            <input type="text" id="registrar" placeholder="Nombre del registrador" required>
             <button type="submit">Agregar Entrada</button>
         </form>
         <button id="downloadBtn">Descargar como CSV</button>
@@ -123,6 +137,8 @@
                     <th>Fecha</th>
                     <th>Estado</th>
                     <th>Notas</th>
+                    <th>Registrador</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
@@ -147,9 +163,20 @@
                     <td>${entry.date}</td>
                     <td class="status-${entry.status.toLowerCase()}">${entry.status}</td>
                     <td>${entry.notes}</td>
+                    <td>${entry.registrar}</td>
+                    <td><button class="delete-btn" onclick="deleteEntry(${index})">Eliminar</button></td>
                 `;
                 tableBody.appendChild(row);
             });
+        }
+
+        // Función para eliminar una entrada
+        function deleteEntry(index) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta entrada?')) {
+                activities.splice(index, 1);
+                localStorage.setItem('discordStaffActivities', JSON.stringify(activities));
+                renderTable();
+            }
         }
 
         // Agregar nueva entrada
@@ -159,7 +186,8 @@
             const date = document.getElementById('date').value;
             const status = document.getElementById('status').value;
             const notes = document.getElementById('notes').value;
-            activities.push({ user, date, status, notes });
+            const registrar = document.getElementById('registrar').value;
+            activities.push({ user, date, status, notes, registrar });
             localStorage.setItem('discordStaffActivities', JSON.stringify(activities));
             renderTable();
             form.reset();
@@ -171,9 +199,9 @@
                 alert('No hay entradas para descargar.');
                 return;
             }
-            let csv = 'Usuario,Fecha,Estado,Notas\n';
+            let csv = 'Usuario,Fecha,Estado,Notas,Registrador\n';
             activities.forEach(entry => {
-                csv += `${entry.user},${entry.date},${entry.status},${entry.notes}\n`;
+                csv += `${entry.user},${entry.date},${entry.status},${entry.notes},${entry.registrar}\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
