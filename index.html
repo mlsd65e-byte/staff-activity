@@ -34,6 +34,13 @@
             margin-bottom: 20px;
             align-items: center;
         }
+        .filter-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
         label {
             font-weight: bold;
             color: #b9bbbe;
@@ -129,6 +136,12 @@
             <input type="text" id="registrar" placeholder="Nombre del registrador" required>
             <button type="submit">Agregar Entrada</button>
         </form>
+        <div class="filter-section">
+            <label for="filterDate">Filtrar por Fecha:</label>
+            <input type="date" id="filterDate">
+            <button id="filterBtn">Filtrar</button>
+            <button id="showAllBtn">Mostrar Todas</button>
+        </div>
         <button id="downloadBtn">Descargar como CSV</button>
         <table id="activityTable">
             <thead>
@@ -151,12 +164,16 @@
         const form = document.getElementById('activityForm');
         const tableBody = document.getElementById('tableBody');
         const downloadBtn = document.getElementById('downloadBtn');
+        const filterBtn = document.getElementById('filterBtn');
+        const showAllBtn = document.getElementById('showAllBtn');
+        const filterDateInput = document.getElementById('filterDate');
         let activities = JSON.parse(localStorage.getItem('discordStaffActivities')) || [];
+        let filteredActivities = activities; // Para manejar el filtro
 
         // Función para renderizar la tabla
-        function renderTable() {
+        function renderTable(activitiesToRender = activities) {
             tableBody.innerHTML = '';
-            activities.forEach((entry, index) => {
+            activitiesToRender.forEach((entry, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${entry.user}</td>
@@ -175,6 +192,7 @@
             if (confirm('¿Estás seguro de que quieres eliminar esta entrada?')) {
                 activities.splice(index, 1);
                 localStorage.setItem('discordStaffActivities', JSON.stringify(activities));
+                filteredActivities = activities; // Resetear filtro
                 renderTable();
             }
         }
@@ -189,8 +207,27 @@
             const registrar = document.getElementById('registrar').value;
             activities.push({ user, date, status, notes, registrar });
             localStorage.setItem('discordStaffActivities', JSON.stringify(activities));
+            filteredActivities = activities; // Resetear filtro
             renderTable();
             form.reset();
+        });
+
+        // Filtrar por fecha
+        filterBtn.addEventListener('click', () => {
+            const filterDate = filterDateInput.value;
+            if (filterDate) {
+                filteredActivities = activities.filter(entry => entry.date === filterDate);
+                renderTable(filteredActivities);
+            } else {
+                alert('Por favor, selecciona una fecha para filtrar.');
+            }
+        });
+
+        // Mostrar todas las entradas
+        showAllBtn.addEventListener('click', () => {
+            filteredActivities = activities;
+            filterDateInput.value = '';
+            renderTable();
         });
 
         // Descargar como CSV
